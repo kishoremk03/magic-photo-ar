@@ -6,7 +6,10 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
+  <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+
+  <!-- MindAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
@@ -17,36 +20,33 @@
       height: 100%;
       overflow: hidden;
       background: black;
+      touch-action: manipulation;
     }
 
-    /* Tap overlay for audio */
-    #tapToStart {
+    /* Simple instruction text */
+    #hint {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0,0,0,0.7);
+      bottom: 20px;
+      width: 100%;
+      text-align: center;
       color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      z-index: 10;
+      font-size: 14px;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0.8;
     }
   </style>
 </head>
 
 <body>
 
-<!-- Audio unlock overlay -->
-<div id="tapToStart">Tap to enable audio</div>
+<div id="hint">Tap once to enable audio, then scan the image</div>
 
 <a-scene
   mindar-image="imageTargetSrc: ./targets.mind;"
   vr-mode-ui="enabled: false"
   device-orientation-permission-ui="enabled: false"
-  renderer="colorManagement: true; antialias: true">
+  renderer="antialias: true; colorManagement: true">
 
   <a-assets>
     <video
@@ -62,15 +62,13 @@
 
   <a-camera look-controls="enabled:false"></a-camera>
 
-  <!-- Aspect-ratio correct plane -->
+  <!-- Aspect-ratio locked video (16:9) -->
   <a-entity mindar-image-target="targetIndex: 0">
     <a-plane
-      id="videoPlane"
-      position="0 0 0"
-      rotation="0 0 0"
       material="shader: flat; src: #vid"
       width="1.2"
-      height="0.675">
+      height="0.675"
+      position="0 0 0">
     </a-plane>
   </a-entity>
 
@@ -78,21 +76,26 @@
 
 <script>
   const video = document.querySelector("#vid");
-  const overlay = document.querySelector("#tapToStart");
   const scene = document.querySelector("a-scene");
+  const hint = document.querySelector("#hint");
 
-  let audioEnabled = false;
+  let audioUnlocked = false;
 
-  overlay.addEventListener("click", () => {
+  // 🔓 REQUIRED user interaction for audio
+  document.body.addEventListener("click", () => {
+    if (audioUnlocked) return;
+
     video.muted = false;
-    video.play();
-    video.pause();
-    audioEnabled = true;
-    overlay.style.display = "none";
+    video.play().then(() => {
+      video.pause();
+      audioUnlocked = true;
+      hint.innerText = "Scan the image";
+      setTimeout(() => hint.style.display = "none", 2000);
+    }).catch(() => {});
   });
 
   scene.addEventListener("targetFound", () => {
-    if (audioEnabled) {
+    if (audioUnlocked) {
       video.currentTime = 0;
       video.play();
     }
