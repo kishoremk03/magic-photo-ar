@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <title>Magic Photo AR</title>
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -18,20 +18,35 @@
       overflow: hidden;
       background: black;
     }
-    a-scene {
-      width: 100% !important;
-      height: 100% !important;
+
+    /* Tap overlay for audio */
+    #tapToStart {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      z-index: 10;
     }
   </style>
 </head>
 
 <body>
 
+<!-- Audio unlock overlay -->
+<div id="tapToStart">Tap to enable audio</div>
+
 <a-scene
   mindar-image="imageTargetSrc: ./targets.mind;"
   vr-mode-ui="enabled: false"
   device-orientation-permission-ui="enabled: false"
-  renderer="antialias: true; colorManagement: true">
+  renderer="colorManagement: true; antialias: true">
 
   <a-assets>
     <video
@@ -40,44 +55,44 @@
       loop
       muted
       playsinline
-      webkit-playsinline>
+      webkit-playsinline
+      crossorigin="anonymous">
     </video>
   </a-assets>
 
   <a-camera look-controls="enabled:false"></a-camera>
 
+  <!-- Aspect-ratio correct plane -->
   <a-entity mindar-image-target="targetIndex: 0">
-    <a-video
-      src="#vid"
+    <a-plane
+      id="videoPlane"
       position="0 0 0"
-      width="1.5"
-      height="0.9"
-      material="shader: flat; side: double">
-</a-video>
-
+      rotation="0 0 0"
+      material="shader: flat; src: #vid"
+      width="1.2"
+      height="0.675">
+    </a-plane>
   </a-entity>
 
 </a-scene>
 
 <script>
   const video = document.querySelector("#vid");
+  const overlay = document.querySelector("#tapToStart");
   const scene = document.querySelector("a-scene");
 
-  let userActivated = false;
+  let audioEnabled = false;
 
-  // REQUIRED user interaction
-  document.body.addEventListener("click", () => {
-    if (!userActivated) {
-      video.muted = false;   // 🔊 UNMUTE
-      video.play();
-      video.pause();
-      userActivated = true;
-      alert("Audio enabled ✔️ Now scan the image");
-    }
+  overlay.addEventListener("click", () => {
+    video.muted = false;
+    video.play();
+    video.pause();
+    audioEnabled = true;
+    overlay.style.display = "none";
   });
 
   scene.addEventListener("targetFound", () => {
-    if (userActivated) {
+    if (audioEnabled) {
       video.currentTime = 0;
       video.play();
     }
@@ -88,9 +103,5 @@
   });
 </script>
 
-
-
 </body>
 </html>
-
-
