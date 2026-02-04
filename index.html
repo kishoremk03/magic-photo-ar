@@ -63,21 +63,24 @@
   const video = document.querySelector("#vid");
   const scene = document.querySelector("a-scene");
 
-  let started = false;
+  let userActivated = false;
 
-  // User interaction unlock
+  // REQUIRED user interaction
   document.body.addEventListener("click", () => {
-    if (!started) {
+    if (!userActivated) {
+      video.muted = false;   // 🔊 UNMUTE
       video.play();
       video.pause();
-      started = true;
-      console.log("Video unlocked");
+      userActivated = true;
+      alert("Audio enabled ✔️ Now scan the image");
     }
   });
 
   scene.addEventListener("targetFound", () => {
-    video.currentTime = 0;
-    video.play();
+    if (userActivated) {
+      video.currentTime = 0;
+      video.play();
+    }
   });
 
   scene.addEventListener("targetLost", () => {
@@ -86,6 +89,8 @@
 </script>
 
 
+
 </body>
 </html>
+
 
